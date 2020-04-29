@@ -24,15 +24,15 @@ abstract type Product end
 
 """
     satisfied(p::Product; platform::Platform = platform_key_abi(),
-              verbose::Bool = false, isolate::Bool = false)
+              verbose::Bool = false, isolate::Bool = true)
 
 Given a `Product`, return `true` if that `Product` is satisfied, e.g. whether
 a file exists that matches all criteria setup for that `Product`.  If `isolate`
 is set to `true`, will isolate all checks from the main Julia process in the
-event that `dlopen()`'ing a library might cause issues.
+event that `dlopen()`'ing or `dlclose()`'ing a library might cause issues.
 """
 function satisfied(p::Product; platform::Platform = platform_key_abi(),
-                               verbose::Bool = false, isolate::Bool = false)
+                               verbose::Bool = false, isolate::Bool = true)
     return locate(p; platform=platform, verbose=verbose, isolate=isolate) != nothing
 end
 
@@ -119,7 +119,7 @@ end
 
 """
 locate(lp::LibraryProduct; verbose::Bool = false,
-        platform::Platform = platform_key_abi())
+        platform::Platform = platform_key_abi(), isolate::Bool = true)
 
 If the given library exists (under any reasonable name) and is `dlopen()`able,
 (assuming it was built for the current platform) return its location.  Note
@@ -128,7 +128,7 @@ that the `dlopen()` test is only run if the current platform matches the given
 on foreign platforms.
 """
 function locate(lp::LibraryProduct; verbose::Bool = false,
-                platform::Platform = platform_key_abi(), isolate::Bool = false)
+                platform::Platform = platform_key_abi(), isolate::Bool = true)
     dir_path = lp.dir_path
     if dir_path === nothing
         dir_path = libdir(lp.prefix, platform)
@@ -247,7 +247,7 @@ end
 
 """
 `locate(fp::ExecutableProduct; platform::Platform = platform_key_abi(),
-                               verbose::Bool = false, isolate::Bool = false)`
+                               verbose::Bool = false, isolate::Bool = true)`
 
 If the given executable file exists and is executable, return its path.
 
@@ -257,7 +257,7 @@ Windows platforms, it will check that the file ends with ".exe", (adding it on
 automatically, if it is not already present).
 """
 function locate(ep::ExecutableProduct; platform::Platform = platform_key_abi(),
-                verbose::Bool = false, isolate::Bool = false)
+                verbose::Bool = false, isolate::Bool = true)
     # On windows, we always slap an .exe onto the end if it doesn't already
     # exist, as Windows won't execute files that don't have a .exe at the end.
     path = if platform isa Windows && !endswith(ep.path, ".exe")
@@ -332,13 +332,13 @@ end
 
 """
 locate(fp::FileProduct; platform::Platform = platform_key_abi(),
-                        verbose::Bool = false, isolate::Bool = false)
+                        verbose::Bool = false, isolate::Bool = true)
 
 If the given file exists, return its path.  The platform argument is ignored
 here, but included for uniformity.
 """
 function locate(fp::FileProduct; platform::Platform = platform_key_abi(),
-                                 verbose::Bool = false, isolate::Bool = false)
+                                 verbose::Bool = false, isolate::Bool = true)
     # Limited variable expansion capabilities
     mappings = Dict()
 
